@@ -1,0 +1,9 @@
+type: web
+name: wa-bot
+build:
+  type: buildpack
+run:
+  command: node server.js
+ports:
+  - port: 3000
+    path: /
