@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  wa-bot:
+    build: .
+    container_name: wa_bot_app
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+      - ./auth_info_baileys:/app/auth_info_baileys
+    environment:
+      - NODE_ENV=production
+      - PORT=3000

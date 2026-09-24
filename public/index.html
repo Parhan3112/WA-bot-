@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Bot & Automation System - Internal Dashboard</title>
+  <meta name="description" content="Sistem otomatisasi WhatsApp API, pesan terjadwal harian, dan bot otomatis untuk kebutuhan internal perusahaan.">
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <i class="fa-brands fa-whatsapp"></i>
+        </div>
+        <div class="brand-text">
+          <h2>WA Automate</h2>
+          <span>Enterprise Bot System</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <a href="#overview" class="nav-link active" data-tab="overview">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Ringkasan & QR</span>
+        </a>
+        <a href="#schedules" class="nav-link" data-tab="schedules">
+          <i class="fa-solid fa-clock"></i>
+          <span>Pesan Terjadwal</span>
+          <span class="badge" id="schedule-count-badge">0</span>
+        </a>
+        <a href="#bot-rules" class="nav-link" data-tab="bot-rules">
+          <i class="fa-solid fa-robot"></i>
+          <span>Bot Otomatis</span>
+          <span class="badge" id="rules-count-badge">0</span>
+        </a>
+        <a href="#contacts" class="nav-link" data-tab="contacts">
+          <i class="fa-solid fa-users"></i>
+          <span>Kontak & Grup WA</span>
+        </a>
+        <a href="#broadcast" class="nav-link" data-tab="broadcast">
+          <i class="fa-solid fa-paper-plane"></i>
+          <span>Kirim Broadcast</span>
+        </a>
+        <a href="#logs" class="nav-link" data-tab="logs">
+          <i class="fa-solid fa-list-check"></i>
+          <span>Log & Pengaturan</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="company-card">
+          <i class="fa-solid fa-building"></i>
+          <span id="sidebar-company-name">PT Sampel Nusantara</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="topbar-title">
+          <h1 id="page-title">Ringkasan & Status WhatsApp</h1>
+          <p id="page-subtitle">Pantau koneksi WhatsApp dan statistik otomatisasi</p>
+        </div>
+
+        <div class="topbar-actions">
+          <div class="status-pill" id="global-status-pill">
+            <span class="status-dot disconnected" id="status-dot"></span>
+            <span id="status-text">Memeriksa Koneksi...</span>
+          </div>
+          <button class="btn btn-outline" id="btn-sync-groups">
+            <i class="fa-solid fa-rotate"></i> Sync Grup
+          </button>
+        </div>
+      </header>
+
+      <!-- TAB 1: OVERVIEW & QR CONNECTION -->
+      <section class="tab-content active" id="tab-overview">
+        <!-- Connection Banner & Stats Grid -->
+        <div class="grid grid-3 mb-6">
+          <div class="stat-card">
+            <div class="stat-icon emerald">
+              <i class="fa-brands fa-whatsapp"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Status Koneksi</span>
+              <h3 id="stat-conn-status">Menghubungkan</h3>
+              <p id="stat-conn-user" class="stat-sub">Belum Terhubung</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon blue">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Jadwal Harian Aktif</span>
+              <h3 id="stat-active-schedules">0</h3>
+              <p class="stat-sub">Pesan dikirim harian otomatis</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon purple">
+              <i class="fa-solid fa-bolt"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Aturan Bot Otomatis</span>
+              <h3 id="stat-active-rules">0</h3>
+              <p class="stat-sub">Auto-responder internal</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Connection Card & QR Scan Area -->
+        <div class="grid grid-2">
+          <div class="card card-glow" id="qr-section">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-qrcode text-emerald"></i> Hubungkan WhatsApp</h2>
+              <span class="badge badge-emerald">Scan QR Code</span>
+            </div>
+            <div class="card-body text-center">
+              <div id="qr-wrapper" class="qr-container">
+                <div class="qr-placeholder" id="qr-loading">
+                  <div class="spinner"></div>
+                  <p>Memuat QR Code WhatsApp...</p>
+                </div>
+                <img id="qr-image" class="qr-code-img hidden" alt="WhatsApp QR Code">
+                <div id="qr-connected-box" class="connected-box hidden">
+                  <div class="avatar-circle">
+                    <i class="fa-solid fa-user-check"></i>
+                  </div>
+                  <h3 id="connected-user-name">WhatsApp Connected</h3>
+                  <p id="connected-user-jid" class="text-muted">628xxx@s.whatsapp.net</p>
+                  <div class="badge badge-success mt-3"><i class="fa-solid fa-circle-check"></i> Siap Mengirim Pesan</div>
+                </div>
+              </div>
+
+              <div class="qr-instructions mt-4">
+                <p><strong>Cara Menghubungkan:</strong></p>
+                <ol class="step-list text-left">
+                  <li>Buka aplikasi WhatsApp di HP Anda</li>
+                  <li>Ketuk <strong>Menu (⋮)</strong> atau <strong>Pengaturan</strong> &gt; <strong>Perangkat Tertaut (Linked Devices)</strong></li>
+                  <li>Arahkan kamera ke QR Code di atas untuk menghubungkan</li>
+                </ol>
+              </div>
+
+              <div class="card-footer-action mt-4" id="qr-actions">
+                <button class="btn btn-danger hidden" id="btn-logout-wa">
+                  <i class="fa-solid fa-right-from-bracket"></i> Logout WhatsApp
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Activity Monitor -->
+          <div class="card">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-chart-line text-blue"></i> Aktivitas Terakhir</h2>
+              <button class="btn btn-sm btn-ghost" id="btn-refresh-logs">
+                <i class="fa-solid fa-sync"></i>
+              </button>
+            </div>
+            <div class="card-body">
+              <div class="activity-feed" id="recent-activity-feed">
+                <div class="empty-state">
+                  <i class="fa-solid fa-inbox"></i>
+                  <p>Belum ada aktivitas tercatat.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: SCHEDULED MESSAGES (PESAN TERJADWAL) -->
+      <section class="tab-content" id="tab-schedules">
+        <div class="content-header-actions mb-4">
+          <div>
+            <h2>Kelola Pesan Terjadwal Harian</h2>
+            <p>Atur pengiriman pesan otomatis harian atau mingguan ke Kontak/Grup WhatsApp</p>
+          </div>
+          <button class="btn btn-primary" id="btn-add-schedule">
+            <i class="fa-solid fa-plus"></i> Buat Jadwal Baru
+          </button>
+        </div>
+
+        <!-- Schedule Cards List -->
+        <div class="schedule-grid" id="schedules-container">
+          <!-- Dynamic Content Loaded by JS -->
+        </div>
+      </section>
+
+      <!-- TAB 3: BOT RULES (AUTO-RESPONDER) -->
+      <section class="tab-content" id="tab-bot-rules">
+        <div class="content-header-actions mb-4">
+          <div>
+            <h2>Aturan Bot Otomatis (Auto-Responder)</h2>
+            <p>Atur balasan otomatis berdasarkan kata kunci yang dikirim oleh pengguna internal</p>
+          </div>
+          <button class="btn btn-primary" id="btn-add-rule">
+            <i class="fa-solid fa-plus"></i> Tambah Aturan Bot
+          </button>
+        </div>
+
+        <div class="rules-grid" id="rules-container">
+          <!-- Dynamic Content -->
+        </div>
+      </section>
+
+      <!-- TAB 4: CONTACTS & GROUPS -->
+      <section class="tab-content" id="tab-contacts">
+        <div class="grid grid-2">
+          <!-- WhatsApp Groups -->
+          <div class="card">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-people-group text-emerald"></i> Grup WhatsApp Terdeteksi</h2>
+              <button class="btn btn-sm btn-outline" id="btn-resync-groups">
+                <i class="fa-solid fa-arrows-rotate"></i> Sync
+              </button>
+            </div>
+            <div class="card-body">
+              <p class="text-muted mb-3">Grup ini dapat dipilih sebagai target pengiriman pesan terjadwal harian.</p>
+              <div class="list-group" id="wa-groups-list">
+                <div class="empty-state">
+                  <i class="fa-solid fa-spinner fa-spin"></i>
+                  <p>Memuat daftar grup...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Internal Contacts -->
+          <div class="card">
+            <div class="card-header">
+              <h2><h2 style="display:inline"><i class="fa-solid fa-address-book text-purple"></i> Daftar Kontak Internal</h2></h2>
+              <button class="btn btn-sm btn-primary" id="btn-add-contact">
+                <i class="fa-solid fa-user-plus"></i> Tambah
+              </button>
+            </div>
+            <div class="card-body">
+              <div class="contact-list" id="contacts-list">
+                <!-- Dynamic contacts -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: BROADCAST DISPATCHER -->
+      <section class="tab-content" id="tab-broadcast">
+        <div class="card max-w-800 mx-auto">
+          <div class="card-header">
+            <h2><i class="fa-solid fa-paper-plane text-emerald"></i> Kirim Broadcast Pesan Massal</h2>
+            <span class="badge badge-warning"><i class="fa-solid fa-shield-halved"></i> Fitur Anti-Ban Enabled</span>
+          </div>
+          <div class="card-body">
+            <form id="form-broadcast">
+              <div class="form-group mb-4">
+                <label>Target Penerima</label>
+                <div class="recipient-selection-box mb-2">
+                  <button type="button" class="btn btn-sm btn-outline active" id="btn-select-all-contacts">Pilih Semua Kontak</button>
+                  <button type="button" class="btn btn-sm btn-outline" id="btn-clear-selection">Bersihkan Selection</button>
+                </div>
+                <div class="recipient-chips-container" id="broadcast-recipient-chips">
+                  <!-- Chips inserted by JS -->
+                </div>
+                <div class="form-hint">Atau masukkan nomor WhatsApp manual (pisahkan dengan koma):</div>
+                <input type="text" id="manual-recipients-input" class="form-control mt-2" placeholder="Contoh: 628123456789, 6289876543210">
+              </div>
+
+              <div class="form-group mb-4">
+                <label>Isi Pesan Broadcast</label>
+                <textarea id="broadcast-message-text" class="form-control" rows="6" placeholder="Ketik pesan broadcast di sini..."></textarea>
+              </div>
+
+              <div class="broadcast-progress-bar hidden" id="broadcast-progress-container">
+                <div class="progress-labels">
+                  <span id="broadcast-progress-status">Mengirim...</span>
+                  <span id="broadcast-progress-percent">0%</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" id="broadcast-progress-fill" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <div class="form-actions align-right">
+                <button type="submit" class="btn btn-primary btn-lg" id="btn-send-broadcast">
+                  <i class="fa-solid fa-paper-plane"></i> Mulai Broadcast Sekarang
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: LOGS & SETTINGS -->
+      <section class="tab-content" id="tab-logs">
+        <div class="grid grid-3-1">
+          <!-- Activity Logs Table -->
+          <div class="card">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-list-check text-blue"></i> Riwayat Log Otomatisasi</h2>
+              <button class="btn btn-sm btn-ghost" id="btn-refresh-full-logs">
+                <i class="fa-solid fa-sync"></i> Refresh Log
+              </button>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table" id="table-logs">
+                  <thead>
+                    <tr>
+                      <th>Waktu</th>
+                      <th>Tipe Log</th>
+                      <th>Penerima / Trigger</th>
+                      <th>Detail Pesan / Catatan</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="logs-table-body">
+                    <!-- Dynamic logs -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Settings Panel -->
+          <div class="card">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-gear text-purple"></i> Pengaturan System</h2>
+            </div>
+            <div class="card-body">
+              <form id="form-settings">
+                <div class="form-group mb-3">
+                  <label>Nama Perusahaan / Organisasi</label>
+                  <input type="text" id="setting-company-name" class="form-control" value="PT Sampel Nusantara">
+                </div>
+
+                <div class="form-group mb-3">
+                  <label>Jeda Anti-Ban Broadcast (Detik)</label>
+                  <input type="number" id="setting-delay" class="form-control" value="3" min="1" max="60">
+                </div>
+
+                <div class="form-group mb-3">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="setting-autoreply" checked>
+                    <span>Aktifkan Bot Auto-Responder</span>
+                  </label>
+                </div>
+
+                <div class="form-group mb-4">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="setting-scheduled" checked>
+                    <span>Aktifkan Pengiriman Pesan Terjadwal</span>
+                  </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                  <i class="fa-solid fa-floppy-disk"></i> Simpan Pengaturan
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL: ADD / EDIT SCHEDULE -->
+  <div class="modal-overlay hidden" id="modal-schedule">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-schedule-title">Buat Pesan Terjadwal Baru</h3>
+        <button class="btn-close" id="btn-close-schedule-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-schedule">
+          <input type="hidden" id="schedule-id">
+          
+          <div class="form-group mb-3">
+            <label>Judul / Nama Jadwal</label>
+            <input type="text" id="sched-title" class="form-control" placeholder="Contoh: Pengingat Standup Pagi Tim IT" required>
+          </div>
+
+          <div class="grid grid-2 mb-3">
+            <div class="form-group">
+              <label>Tipe Penerima</label>
+              <select id="sched-recipient-type" class="form-control">
+                <option value="group">Grup WhatsApp</option>
+                <option value="contact">Nomor Kontak</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Pilih Target</label>
+              <select id="sched-target-select" class="form-control" required>
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-2 mb-3">
+            <div class="form-group">
+              <label>Jam Pengiriman (24 Jam)</label>
+              <input type="time" id="sched-time" class="form-control" value="08:00" required>
+            </div>
+            <div class="form-group">
+              <label>Frekuensi / Pengulangan</label>
+              <select id="sched-recurrence" class="form-control">
+                <option value="daily">Setiap Hari (Daily)</option>
+                <option value="weekly">Hari Kerja (Senin - Jumat)</option>
+                <option value="custom">Hari Tertentu</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group mb-3" id="sched-days-container">
+            <label>Pilih Hari Pengiriman</label>
+            <div class="days-selector">
+              <label><input type="checkbox" value="1" checked> Sen</label>
+              <label><input type="checkbox" value="2" checked> Sel</label>
+              <label><input type="checkbox" value="3" checked> Rab</label>
+              <label><input type="checkbox" value="4" checked> Kam</label>
+              <label><input type="checkbox" value="5" checked> Jum</label>
+              <label><input type="checkbox" value="6"> Sab</label>
+              <label><input type="checkbox" value="0"> Min</label>
+            </div>
+          </div>
+
+          <div class="form-group mb-4">
+            <label>Isi Pesan WhatsApp</label>
+            <div class="variable-tag-bar mb-2">
+              <span class="tag-insert" data-var="{tanggal}">+ {tanggal}</span>
+              <span class="tag-insert" data-var="{jam}">+ {jam}</span>
+              <span class="tag-insert" data-var="{hari}">+ {hari}</span>
+              <span class="tag-insert" data-var="{perusahaan}">+ {perusahaan}</span>
+            </div>
+            <textarea id="sched-message" class="form-control" rows="5" placeholder="Ketik isi pesan terjadwal harian..." required></textarea>
+          </div>
+
+          <div class="form-actions align-right">
+            <button type="button" class="btn btn-outline" id="btn-cancel-schedule">Batal</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Simpan Jadwal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT BOT RULE -->
+  <div class="modal-overlay hidden" id="modal-rule">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-rule-title">Tambah Aturan Bot Otomatis</h3>
+        <button class="btn-close" id="btn-close-rule-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-rule">
+          <input type="hidden" id="rule-id">
+
+          <div class="form-group mb-3">
+            <label>Nama Aturan Bot</label>
+            <input type="text" id="rule-name" class="form-control" placeholder="Contoh: Menu Absensi Karyawan" required>
+          </div>
+
+          <div class="grid grid-2 mb-3">
+            <div class="form-group">
+              <label>Kata Kunci Trigger</label>
+              <input type="text" id="rule-trigger" class="form-control" placeholder="Contoh: !absensi" required>
+            </div>
+            <div class="form-group">
+              <label>Tipe Pencocokan</label>
+              <select id="rule-match-type" class="form-control">
+                <option value="contains">Mengandung Kata (Contains)</option>
+                <option value="exact">Satu Kata Persis (Exact Match)</option>
+                <option value="startswith">Diawali Kata (Starts With)</option>
+                <option value="regex">Pattern Regex</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group mb-3">
+            <label>Cakupan Target Chat</label>
+            <select id="rule-target-scope" class="form-control">
+              <option value="all">Semua Chat (Pribadi & Grup)</option>
+              <option value="private">Chat Pribadi Saja</option>
+              <option value="group">Chat Grup Saja</option>
+            </select>
+          </div>
+
+          <div class="form-group mb-4">
+            <label>Teks Balasan Otomatis</label>
+            <div class="variable-tag-bar mb-2">
+              <span class="tag-insert-rule" data-var="{nama}">+ {nama}</span>
+              <span class="tag-insert-rule" data-var="{nomor}">+ {nomor}</span>
+              <span class="tag-insert-rule" data-var="{tanggal}">+ {tanggal}</span>
+              <span class="tag-insert-rule" data-var="{jam}">+ {jam}</span>
+              <span class="tag-insert-rule" data-var="{perusahaan}">+ {perusahaan}</span>
+            </div>
+            <textarea id="rule-response" class="form-control" rows="5" placeholder="Ketik balasan pesan otomatis di sini..." required></textarea>
+          </div>
+
+          <div class="form-actions align-right">
+            <button type="button" class="btn btn-outline" id="btn-cancel-rule">Batal</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Simpan Aturan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD CONTACT -->
+  <div class="modal-overlay hidden" id="modal-contact">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Tambah Kontak Internal</h3>
+        <button class="btn-close" id="btn-close-contact-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-contact">
+          <div class="form-group mb-3">
+            <label>Nama Lengkap / Jabatan</label>
+            <input type="text" id="contact-name" class="form-control" placeholder="Contoh: Ahmad Rizki (Finance)" required>
+          </div>
+          <div class="form-group mb-3">
+            <label>Nomor WhatsApp (dengan kode negara)</label>
+            <input type="text" id="contact-phone" class="form-control" placeholder="Contoh: 6281234567890" required>
+          </div>
+          <div class="form-group mb-4">
+            <label>Catatan / Depertemen</label>
+            <input type="text" id="contact-notes" class="form-control" placeholder="Contoh: Manager Keuangan">
+          </div>
+          <div class="form-actions align-right">
+            <button type="button" class="btn btn-outline" id="btn-cancel-contact">Batal</button>
+            <button type="submit" class="btn btn-primary">Simpan Kontak</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- JS App -->
+  <script src="js/app.js"></script>
+</body>
+</html>

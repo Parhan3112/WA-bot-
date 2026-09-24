@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# WhatsApp Auth Session & Credentials (IMPORTANT: Do NOT upload sensitive WA session keys)
+auth_info_baileys/
+
+# Data directory (optional)
+data/db.json
+
+# Environment variables
+.env
+
+# Logs
+logs/
+*.log
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
