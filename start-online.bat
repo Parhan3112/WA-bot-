@@ -1,7 +1,7 @@
 @echo off
-title WhatsApp Bot Server & Online Tunnel Launcher
+title WhatsApp Bot Server & Cloudflare Tunnel Launcher
 echo ====================================================
-echo 🚀 Menjalankan WhatsApp Bot Server & Online Tunnel
+echo 🚀 Menjalankan WhatsApp Bot Server & Cloudflare Tunnel
 echo ====================================================
 echo.
 
@@ -12,9 +12,9 @@ echo Menunggu server siap...
 timeout /t 3 /nobreak >nul
 
 echo.
-echo 🌐 Menghubungkan ke Internet (HTTPS Domain Gratis)...
+echo 🌐 Menghubungkan ke Cloudflare Tunnel (HTTPS Domain Gratis & WebSocket)...
 echo.
 
-npx --yes localtunnel --port 3000
+npx --yes cloudflared tunnel --url http://localhost:3000
 
 pause

@@ -11,6 +11,7 @@ const path = require('path');
 const fs = require('fs');
 const chatbot = require('./chatbot');
 const db = require('./db');
+const mongoStore = require('./mongoDbStore');
 
 class WhatsAppService {
   constructor() {
@@ -40,6 +41,8 @@ class WhatsAppService {
       this.status = 'connecting';
       this.emit('status_change', { status: this.status });
 
+      await mongoStore.init();
+
       const { state, saveCreds } = await useMultiFileAuthState(this.authFolder);
       const { version } = await fetchLatestBaileysVersion();
 
@@ -53,7 +56,13 @@ class WhatsAppService {
         syncFullHistory: false
       });
 
-      this.sock.ev.on('creds.update', saveCreds);
+      this.sock.ev.on('creds.update', async () => {
+        await saveCreds();
+        // Sync creds to MongoDB Atlas if available
+        if (mongoStore.isMongo && state.creds) {
+          await mongoStore.setSessionData('baileys_creds', state.creds);
+        }
+      });
 
       this.sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update;
@@ -63,6 +72,12 @@ class WhatsAppService {
             this.qrCode = await QRCode.toDataURL(qr);
             this.status = 'qr_ready';
             console.log('📱 New WhatsApp QR Code generated');
+
+            // Save QR Data URL to MongoDB Atlas so Vercel frontend can display it
+            if (mongoStore.isMongo) {
+              await mongoStore.setSessionData('qr_code_data_url', this.qrCode);
+            }
+
             this.emit('qr', { qr: this.qrCode });
             this.emit('status_change', { status: this.status, qr: this.qrCode });
           } catch (err) {
@@ -89,6 +104,12 @@ class WhatsAppService {
           this.user = this.sock.user;
           console.log(`✅ WhatsApp Connected as: ${this.user?.name || this.user?.id}`);
 
+          // Save active user info & clear QR code from MongoDB Atlas
+          if (mongoStore.isMongo) {
+            await mongoStore.setSessionData('qr_code_data_url', null);
+            await mongoStore.setSessionData('baileys_creds', state.creds);
+          }
+
           // Fetch group lists
           await this.syncGroups();
 
@@ -105,16 +126,13 @@ class WhatsAppService {
         if (m.type !== 'notify') return;
 
         for (const msg of m.messages) {
-          // Ignore status broadcasts and sent messages by bot itself
           if (msg.key.fromMe || msg.key.remoteJid === 'status@broadcast') continue;
 
-          // Check setting for auto-reply
           const settings = db.getSettings();
           if (settings.autoReplyEnabled !== false) {
             await chatbot.handleMessage(this, msg);
           }
 
-          // Emit live message event to dashboard
           const text = msg.message?.conversation || 
                        msg.message?.extendedTextMessage?.text || 
                        msg.message?.imageMessage?.caption || '';
@@ -170,8 +188,7 @@ class WhatsAppService {
     const jid = this.formatJid(target);
     const result = await this.sock.sendMessage(jid, { text });
     
-    // Log outbound message
-    db.addLog({
+    mongoStore.addLog({
       type: 'OUTBOUND',
       recipient: jid,
       message: text,
@@ -190,9 +207,13 @@ class WhatsAppService {
       this.qrCode = null;
       this.user = null;
       
-      // Clean auth directory
       if (fs.existsSync(this.authFolder)) {
         fs.rmSync(this.authFolder, { recursive: true, force: true });
+      }
+
+      if (mongoStore.isMongo) {
+        await mongoStore.removeSessionData('baileys_creds');
+        await mongoStore.removeSessionData('qr_code_data_url');
       }
 
       this.emit('status_change', { status: this.status });

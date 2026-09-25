@@ -1,0 +1,28 @@
+name: WhatsApp Scheduled Message Dispatcher
+
+on:
+  schedule:
+    # Runs every 15 minutes automatically in GitHub Cloud
+    - cron: '*/15 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  run-scheduler:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm ci --only=production
+
+      - name: Execute WhatsApp Scheduler
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: node scripts/githubRunner.js
