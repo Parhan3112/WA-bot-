@@ -8,39 +8,53 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Serve static frontend files
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // Auto init mongo connection if URI present
 app.use(async (req, res, next) => {
-  if (!mongoStore.client && process.env.MONGODB_URI) {
-    await mongoStore.init();
+  try {
+    if (!mongoStore.client && process.env.MONGODB_URI) {
+      await mongoStore.init();
+    }
+  } catch (e) {
+    console.error('Mongo init warning:', e.message);
   }
   next();
 });
 
 // REST API Endpoints
 app.get('/api/status', async (req, res) => {
-  const isMongo = mongoStore.isMongo;
-  let user = null;
-  let qr = null;
+  try {
+    const isMongo = mongoStore.isMongo;
+    let user = null;
+    let qr = null;
 
-  if (isMongo) {
-    const creds = await mongoStore.getSessionData('baileys_creds');
-    user = creds?.me || null;
-    qr = await mongoStore.getSessionData('qr_code_data_url');
+    if (isMongo) {
+      const creds = await mongoStore.getSessionData('baileys_creds');
+      user = creds?.me || null;
+      qr = await mongoStore.getSessionData('qr_code_data_url');
+    }
+
+    res.json({
+      status: user ? 'connected' : (qr ? 'qr_ready' : 'disconnected'),
+      qr: qr || null,
+      user: user || null,
+      isCloudDB: isMongo
+    });
+  } catch (err) {
+    res.json({ status: 'disconnected', isCloudDB: false, error: err.message });
   }
-
-  res.json({
-    status: user ? 'connected' : (qr ? 'qr_ready' : 'disconnected'),
-    qr: qr || null,
-    user: user || null,
-    isCloudDB: isMongo
-  });
 });
 
 app.get('/api/schedules', async (req, res) => {
-  const data = await mongoStore.getSchedules();
-  res.json(data);
+  try {
+    const data = await mongoStore.getSchedules();
+    res.json(data);
+  } catch (e) {
+    res.json(dbLocal.getSchedules());
+  }
 });
 
 app.post('/api/schedules', async (req, res) => {
@@ -71,8 +85,12 @@ app.delete('/api/schedules/:id', async (req, res) => {
 });
 
 app.get('/api/bot-rules', async (req, res) => {
-  const data = await mongoStore.getBotRules();
-  res.json(data);
+  try {
+    const data = await mongoStore.getBotRules();
+    res.json(data);
+  } catch (e) {
+    res.json(dbLocal.getBotRules());
+  }
 });
 
 app.post('/api/bot-rules', async (req, res) => {
@@ -103,8 +121,12 @@ app.delete('/api/bot-rules/:id', async (req, res) => {
 });
 
 app.get('/api/contacts', async (req, res) => {
-  const data = await mongoStore.getContacts();
-  res.json(data);
+  try {
+    const data = await mongoStore.getContacts();
+    res.json(data);
+  } catch (e) {
+    res.json(dbLocal.getContacts());
+  }
 });
 
 app.post('/api/contacts', async (req, res) => {
@@ -126,8 +148,20 @@ app.delete('/api/contacts/:id', async (req, res) => {
 });
 
 app.get('/api/logs', async (req, res) => {
-  const logs = await mongoStore.getLogs(100);
-  res.json(logs);
+  try {
+    const logs = await mongoStore.getLogs(100);
+    res.json(logs);
+  } catch (e) {
+    res.json(dbLocal.getLogs(100));
+  }
+});
+
+app.get('/api/groups', (req, res) => {
+  res.json([]);
+});
+
+app.get('/api/settings', (req, res) => {
+  res.json(dbLocal.getSettings());
 });
 
 // SPA fallback
